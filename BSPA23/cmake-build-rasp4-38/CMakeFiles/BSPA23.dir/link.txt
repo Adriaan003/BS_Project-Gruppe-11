@@ -1,0 +1,1 @@
+/usr/bin/cc -g   CMakeFiles/BSPA23.dir/main.c.o CMakeFiles/BSPA23.dir/keyValStore.c.o CMakeFiles/BSPA23.dir/sub.c.o  -o BSPA23 

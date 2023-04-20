@@ -10,11 +10,6 @@
 #include "keyValStore.h"
 
 
-void hello(int clientSocket) {
-    char *msg = "Hello, World!\n";
-    send(clientSocket, msg, strlen(msg), 0);
-}
-
 
 int main() {
 

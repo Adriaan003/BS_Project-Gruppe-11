@@ -4,5 +4,5 @@
 
 void setKey(char* key, char* value);
 char *getKey(char* key);
-void delKey(char *key);
+void delKey(char *key, int clientSocket);
 #endif //BSPA23_KEYVALSTORE_H

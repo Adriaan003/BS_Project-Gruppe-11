@@ -10,15 +10,11 @@
 #include "keyValStore.h"
 
 
-
 int main() {
-
-
     int clientSocket[3], client_len;
     struct sockaddr_in client;
     pid_t pid[3];
 
-    int value;
     int servSocket = setServSocket();
 
 
@@ -66,13 +62,8 @@ int main() {
                         exit(1);
                     }
 
-                    //Fun "strtol" Konvertiert String into Long
-                    /**value = strtol(buffer, NULL, 0);**/
-
-                    //value = ntohl(value);
-
                     char arg1[50], arg2[50], arg3[100];
-                    sscanf(buffer, "%s %s %s", arg1, arg2, arg3);
+                    sscanf(buffer, "%s %s %[^\n]", arg1, arg2, arg3);
 
 
                     char set[3] = "SET";
@@ -95,9 +86,7 @@ int main() {
 
                     } else if (strncmp(arg1, del, strlen("DEL")) == 0) {
 
-                        printf("DEL");
-
-
+                        delKey(arg2, clientSocket[j]);
                     } else if (strncmp(arg1, quit, strlen("QUIT")) == 0) {
 
                         buffer = "Client Socket wird geschloßen.\n";
@@ -107,8 +96,8 @@ int main() {
 
                     } else {
                         // Anweisungen, die ausgeführt werden, wenn weder Bedingung1 noch Bedingung2 wahr sind
-                        printf("Else");
-
+                        buffer = "Ungültige Eingabe.\n";
+                        send(clientSocket[j], buffer, strlen(buffer), 0);
 
                     }
 
@@ -120,7 +109,7 @@ int main() {
     }
 
 // Hier chillt der Vater
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < 1; ++i) {
         waitpid(pid[i], NULL, 0);
         close(clientSocket[i]);
 

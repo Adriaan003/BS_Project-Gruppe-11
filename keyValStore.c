@@ -3,6 +3,7 @@
 #include "stdlib.h"
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/socket.h>
 #include "string.h"
 
 
@@ -38,21 +39,23 @@ char *getKey(char *key) {
     return res;
 }
 
-void delKey(char *key) {
+void delKey(char *key, int clientSocket) {
+    char *res = malloc(50); // Dynamische Speicherzuweisung
     int num = strtol(key + 3, NULL, 0);
 
+    if (newData[num].value[0] == 0) {
+        sprintf(res, "DEL:key%i:key_nonexistent\n",num);
+        send(clientSocket, res, strlen(res), 0);
+    }
+
+    newData[num].value[0] = 0;
+
+    //Alternative um die Zeichenkette komplett zu löschen.
+    //memset(&newData[num], 0, sizeof(Data));
+
 
 
 
 }
 
 
-int keyValStore() {
-
-
-    scanf("%s", newData[0].key);
-    scanf("%s", newData[0].value);
-
-
-    return 0;
-}

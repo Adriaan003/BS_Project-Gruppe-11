@@ -119,7 +119,7 @@ int main() {
 
                 // die BEG/END exklusive Transaktionen beginnen hier.
 
-                if (strncmp(sharedArg, beg, strlen("BEG")) == 0) {
+                if (strncmp(arg1, beg, strlen("BEG")) == 0) {
                     openSemaphore(sem_id);
 
                     while (1) {

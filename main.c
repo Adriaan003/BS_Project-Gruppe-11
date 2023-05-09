@@ -117,7 +117,7 @@ int main() {
                 char del[3] = "DEL";
                 char quit[4] = "QUIT";
 
-               
+               // die BEG/END exklusive Transaktionen beginnen hier.
 
                 while (strncmp(sharedArg, beg, strlen("BEG")) == 0) {
                     openSemaphore(sem_id);
@@ -166,6 +166,9 @@ int main() {
 
                     closeSemaphore(sem_id);
                 }
+
+                
+                //Standard Bedingungen, falls BEG/END nicht gewählt wurden
 
                 if (strncmp(sharedArg, beg, strlen("BEG")) != 0) {
 

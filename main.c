@@ -12,8 +12,6 @@
 #include "semaphore.h"
 
 
-
-
 typedef struct Data {
     char key[10];
     char value[50];
@@ -119,9 +117,9 @@ int main() {
                 char del[3] = "DEL";
                 char quit[4] = "QUIT";
 
-                printf("%c", *sharedArg);
+               
 
-                while (strncmp(arg1, beg, strlen("BEG")) == 0) {
+                while (strncmp(sharedArg, beg, strlen("BEG")) == 0) {
                     openSemaphore(sem_id);
 
                     if (read(clientSocket[j], buffer, BUFSIZ) < 0) {
@@ -160,6 +158,10 @@ int main() {
                         closeSemaphore(sem_id);
                         break;
 
+                    }
+                    else{
+                        closeSemaphore(sem_id);
+                        continue;
                     }
 
                     closeSemaphore(sem_id);

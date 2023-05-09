@@ -117,65 +117,62 @@ int main() {
                 char del[3] = "DEL";
                 char quit[4] = "QUIT";
 
-               // die BEG/END exklusive Transaktionen beginnen hier.
+                // die BEG/END exklusive Transaktionen beginnen hier.
 
-                while (strncmp(sharedArg, beg, strlen("BEG")) == 0) {
+                if (strncmp(sharedArg, beg, strlen("BEG")) == 0) {
                     openSemaphore(sem_id);
 
-                    if (read(clientSocket[j], buffer, BUFSIZ) < 0) {
-                        perror("Es konnten keine Daten empfangt werden.\t");
-                        exit(1);
-                    }
-                    sscanf(buffer, "%s %s %[^\n]", arg1, arg2, arg3);
+                    while (1) {
+                        if (read(clientSocket[j], buffer, BUFSIZ) < 0) {
+                            perror("Es konnten keine Daten empfangt werden.\t");
+                            exit(1);
+                        }
+                        sscanf(buffer, "%s %s %[^\n]", arg1, arg2, arg3);
 
-                    if (strncmp(arg1, set, strlen("SET")) == 0) {
+                        if (strncmp(arg1, set, strlen("SET")) == 0) {
 
-                        setKey(arg2, arg3, sharedData);
-
-
-                    } else if (strncmp(arg1, get, strlen("GET")) == 0) {
-                        *buffer = 0;
-
-                        buffer = getKey(arg2, sharedData);
-                        send(clientSocket[j], buffer, strlen(buffer), 0);
+                            setKey(arg2, arg3, sharedData);
 
 
-                    } else if (strncmp(arg1, del, strlen("DEL")) == 0) {
+                        } else if (strncmp(arg1, get, strlen("GET")) == 0) {
+                            *buffer = 0;
 
-                        delKey(arg2, clientSocket[j], sharedData);
-
-
-                    } else if (strncmp(arg1, quit, strlen("QUIT")) == 0) {
-
-                        //buffer = "Client Socket wird geschloßen.\n";
-                        send(clientSocket[j], buffer, strlen(buffer), 0);
-                        close(clientSocket[j]);
+                            buffer = getKey(arg2, sharedData);
+                            send(clientSocket[j], buffer, strlen(buffer), 0);
 
 
-                    } else if (strncmp(arg1, end, strlen("END")) == 0) {
-                        strcpy(sharedArg, end);
-                        send(clientSocket[j], eeeeeeee, strlen(eeeeeeee), 0);
-                        closeSemaphore(sem_id);
-                        break;
+                        } else if (strncmp(arg1, del, strlen("DEL")) == 0) {
 
-                    }
-                    else{
-                        closeSemaphore(sem_id);
-                        continue;
+                            delKey(arg2, clientSocket[j], sharedData);
+
+
+                        } else if (strncmp(arg1, quit, strlen("QUIT")) == 0) {
+
+                            //buffer = "Client Socket wird geschloßen.\n";
+                            send(clientSocket[j], buffer, strlen(buffer), 0);
+                            close(clientSocket[j]);
+
+
+                        } else if (strncmp(arg1, end, strlen("END")) == 0) {
+                            strcpy(sharedArg, end);
+                            send(clientSocket[j], eeeeeeee, strlen(eeeeeeee), 0);
+                            closeSemaphore(sem_id);
+                            break;
+                        }
                     }
 
-                    closeSemaphore(sem_id);
+
+
+                    // closeSemaphore(sem_id);
                 }
 
-                
+
                 //Standard Bedingungen, falls BEG/END nicht gewählt wurden
 
                 if (strncmp(sharedArg, beg, strlen("BEG")) != 0) {
 
                     if (strncmp(arg1, set, strlen("SET")) == 0) {
-
                         setKey(arg2, arg3, sharedData);
-
 
                     } else if (strncmp(arg1, get, strlen("GET")) == 0) {
                         *buffer = 0;
@@ -198,20 +195,10 @@ int main() {
                     } else {
                         continue;
                     }
-
-
                 }
-
-
-
                 // memset(&arg1, 0, sizeof(arg1));
-
-
                 // closeSemaphore(sem_id);
-
             }
-
-
         }
     }
 

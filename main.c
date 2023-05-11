@@ -11,12 +11,57 @@
 #include "keyValStore.h"
 #include "semaphore.h"
 
+#define NumberOfCHILDS 2
+
 
 typedef struct Data {
     char key[10];
     char value[50];
 } Data;
 Data newData[50];
+
+void clientReadLine(int clientSocket, char *buffer) {
+    if (read(clientSocket, buffer, BUFSIZ) < 0) {
+        perror("Es konnten keine Daten empfangt werden.\t");
+        exit(1);
+    }
+}
+
+void runProgram(int clientSocket,
+                char *arg1, char *arg2, char *arg3,
+                Data *sharedData, char *buffer) {
+    char set[3] = "SET";
+    char get[3] = "GET";
+    char del[3] = "DEL";
+    char quit[4] = "QUIT";
+
+    if (strncmp(arg1, set, strlen("SET")) == 0) {
+
+        setKey(arg2, arg3, sharedData);
+
+
+    } else if (strncmp(arg1, get, strlen("GET")) == 0) {
+        *buffer = 0;
+
+        buffer = getKey(arg2, sharedData);
+        send(clientSocket, buffer, strlen(buffer), 0);
+
+
+    } else if (strncmp(arg1, del, strlen("DEL")) == 0) {
+
+        delKey(arg2, clientSocket, sharedData);
+
+
+    } else if (strncmp(arg1, quit, strlen("QUIT")) == 0) {
+
+        //buffer = "Client Socket wird geschloßen.\n";
+        send(clientSocket, buffer, strlen(buffer), 0);
+        close(clientSocket);
+
+
+    }
+
+}
 
 int main() {
     int clientSocket[3], client_len, shm_id, shm_id2, sem_id;
@@ -31,23 +76,20 @@ int main() {
     // Implementierung gemeinsamen Speicherplatzes
     // Shared Struct Data
 
-
     Data *sharedData;
 
     shm_id = shmget(IPC_PRIVATE, sizeof(Data) * 50, IPC_CREAT | 0644);
 
     sharedData = (struct Data *) shmat(shm_id, NULL, 0);
+
     for (int i = 0; i < 50; ++i) {
         sharedData[i] = newData[i];
     }
-
-
+    //SharedArg für BEG/END Befehle
     char *sharedArg;
     shm_id2 = shmget(IPC_PRIVATE, sizeof(char) * 6, IPC_CREAT | 0644);
 
-
     sharedArg = (char *) shmat(shm_id2, 0, 0);
-
 
     if (shm_id == -1 || shm_id2 == -1) {
         perror("Das Segment konnte nicht angelegt werden!");
@@ -55,7 +97,7 @@ int main() {
     }
 
 
-    for (int i = 0; i < 2; ++i) {
+    for (int i = 0; i < NumberOfCHILDS; ++i) {
         pid[i] = fork();        // Erzeugung Kind-Prozesse
         if (pid[i] == -1) {
             perror("Kind konnte nicht erzeugt werden!");
@@ -68,7 +110,7 @@ int main() {
     }
 
 
-    for (int j = 0; j < 2; ++j) {
+    for (int j = 0; j < NumberOfCHILDS; ++j) {
         if (pid[j] == 0) {      // der Kind-Prozess startet hier seine Arbeit
 
 
@@ -96,11 +138,9 @@ int main() {
 
 
                 char arg1[50], arg2[50], arg3[100];
+
                 // Empfang der Daten vom Client. Die Daten werden im buffer gespeichert
-                if (read(clientSocket[j], buffer, BUFSIZ) < 0) {
-                    perror("Es konnten keine Daten empfangt werden.\t");
-                    exit(1);
-                }
+                clientReadLine(clientSocket[j], buffer);
 
 
                 sscanf(buffer, "%s %s %[^\n]", arg1, arg2, arg3);
@@ -112,10 +152,7 @@ int main() {
 
                     strcpy(sharedArg, beg);
                 }
-                char set[3] = "SET";
-                char get[3] = "GET";
-                char del[3] = "DEL";
-                char quit[4] = "QUIT";
+
 
                 // die BEG/END exklusive Transaktionen beginnen hier.
 
@@ -123,81 +160,30 @@ int main() {
                     openSemaphore(sem_id);
 
                     while (1) {
-                        if (read(clientSocket[j], buffer, BUFSIZ) < 0) {
-                            perror("Es konnten keine Daten empfangt werden.\t");
-                            exit(1);
-                        }
+
+                        clientReadLine(clientSocket[j], buffer);
+
                         sscanf(buffer, "%s %s %[^\n]", arg1, arg2, arg3);
 
-                        if (strncmp(arg1, set, strlen("SET")) == 0) {
-
-                            setKey(arg2, arg3, sharedData);
-
-
-                        } else if (strncmp(arg1, get, strlen("GET")) == 0) {
-                            *buffer = 0;
-
-                            buffer = getKey(arg2, sharedData);
-                            send(clientSocket[j], buffer, strlen(buffer), 0);
-
-
-                        } else if (strncmp(arg1, del, strlen("DEL")) == 0) {
-
-                            delKey(arg2, clientSocket[j], sharedData);
-
-
-                        } else if (strncmp(arg1, quit, strlen("QUIT")) == 0) {
-
-                            //buffer = "Client Socket wird geschloßen.\n";
-                            send(clientSocket[j], buffer, strlen(buffer), 0);
-                            close(clientSocket[j]);
-
-
-                        } else if (strncmp(arg1, end, strlen("END")) == 0) {
+                        if (strncmp(arg1, end, strlen("END")) == 0) {
                             strcpy(sharedArg, end);
                             send(clientSocket[j], eeeeeeee, strlen(eeeeeeee), 0);
                             closeSemaphore(sem_id);
                             break;
                         }
+
+                        runProgram(clientSocket[j], arg1, arg2, arg3, sharedData, buffer);
+
                     }
-
-
-
-                    // closeSemaphore(sem_id);
                 }
-
 
                 //Standard Bedingungen, falls BEG/END nicht gewählt wurden
 
                 if (strncmp(sharedArg, beg, strlen("BEG")) != 0) {
 
-                    if (strncmp(arg1, set, strlen("SET")) == 0) {
-                        setKey(arg2, arg3, sharedData);
+                    runProgram(clientSocket[j], arg1, arg2, arg3, sharedData, buffer);
 
-                    } else if (strncmp(arg1, get, strlen("GET")) == 0) {
-                        *buffer = 0;
-
-                        buffer = getKey(arg2, sharedData);
-                        send(clientSocket[j], buffer, strlen(buffer), 0);
-
-
-                    } else if (strncmp(arg1, del, strlen("DEL")) == 0) {
-
-                        delKey(arg2, clientSocket[j], sharedData);
-
-
-                    } else if (strncmp(arg1, quit, strlen("QUIT")) == 0) {
-
-                        //buffer = "Client Socket wird geschloßen.\n";
-                        send(clientSocket[j], buffer, strlen(buffer), 0);
-                        close(clientSocket[j]);
-
-                    } else {
-                        continue;
-                    }
                 }
-                // memset(&arg1, 0, sizeof(arg1));
-                // closeSemaphore(sem_id);
             }
         }
     }
@@ -206,7 +192,7 @@ int main() {
 
 // Vaterprozess wartet auf Kind-Prozesse
     if (pid[0] != 0) {
-        for (int i = 0; i < 2; ++i) {
+        for (int i = 0; i < NumberOfCHILDS; ++i) {
             printf("Vater mit ID %i wartet auf weitere/n Kind-Prozesse.\n", getpid());
             waitpid(pid[i], NULL, 0);
         }

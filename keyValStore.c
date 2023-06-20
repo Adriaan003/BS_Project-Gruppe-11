@@ -12,7 +12,7 @@
 
 
 struct message {
-    int mtype;
+    long mtype;
     char mtext[MAX_MSG_SIZE];
 };
 
@@ -34,14 +34,14 @@ void setKey(char *key, char *value, Data *sharedData, Data (*sharedSub)[50], int
 
         if (strncmp(sharedSub[i][num].sub, sub, strlen("SUB")) == 0) {
 
-            key_t key;
+            key_t key_;
             int mq;
             struct message msg;
 
             // unique key für shared message queue
-            key = ftok("/path/to/keyfile", 'A');
+            key_ = ftok("/path/to/keyfile", 'A');
 
-            mq = msgget(key, 0666);
+            mq = msgget(key_, 0666);
             if (mq == -1) {
                 perror("msgget");
                 exit(1);
@@ -50,7 +50,7 @@ void setKey(char *key, char *value, Data *sharedData, Data (*sharedSub)[50], int
 
             msg.mtype = sharedSub[i][num].pid;  // Message type
             strncpy(msg.mtext, sharedData[num].value, MAX_MSG_SIZE);
-            printf("SND: %i\n", msg.mtype);
+            printf("SND: %li\n", msg.mtype);
             // Sendung der Nachricht in die MQ
             if (msgsnd(mq, &msg, sizeof(struct message), 0) == -1) {
                 perror("msgsnd");

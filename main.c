@@ -20,7 +20,7 @@
 
 
 struct message {
-    int mtype;
+    long mtype;
     char mtext[MAX_MSG_SIZE];
 };
 
@@ -145,7 +145,7 @@ int main() {
     key = ftok("/path/to/keyfile", 'A');
 
 
-    mq = msgget(key, IPC_CREAT | 0666);
+    mq = msgget(key, 0666);
     if (mq == -1) {
         perror("msgget");
         exit(1);
@@ -314,6 +314,7 @@ int main() {
            IPC_RMID, 0);
     semctl(sem_id,
            0, IPC_RMID);
+    close(mq);
 
     return 0;
 

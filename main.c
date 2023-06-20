@@ -185,12 +185,15 @@ int main() {
                 }
                 if (pid[i] == 0) {      // Verhinderung des exponentiellen Wachstums der Kind-Prozesse
                     while (1) {         // Empfang der Nachricht aus MQ
+                        int type = getpid() -4;
+                        printf("RCV: %i\n",getpid());
+                        printf("RCV: %i\n",type);
 
-                        if (msgrcv(mq, &msg, sizeof(struct message) - sizeof(long), 0, 0) == -1) {
+                        if (msgrcv(mq, &msg, sizeof(struct message),type , 0) == -1) {
                             perror("msgrcv");
                             exit(1);
                         }
-
+                        printf("Success!");
                         char *msgg = malloc(MAX_MSG_SIZE);
                         char *msgg2 = malloc(MAX_MSG_SIZE);
                         strcpy(msgg2, "Value Changed : ");

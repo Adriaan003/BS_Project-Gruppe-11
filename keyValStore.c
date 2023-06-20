@@ -50,9 +50,9 @@ void setKey(char *key, char *value, Data *sharedData, Data (*sharedSub)[50], int
 
             msg.mtype = sharedSub[i][num].pid;  // Message type
             strncpy(msg.mtext, sharedData[num].value, MAX_MSG_SIZE);
-
+            printf("SND: %i\n", msg.mtype);
             // Sendung der Nachricht in die MQ
-            if (msgsnd(mq, &msg, sizeof(struct message) - sizeof(long), 0) == -1) {
+            if (msgsnd(mq, &msg, sizeof(struct message), 0) == -1) {
                 perror("msgsnd");
                 exit(1);
             }

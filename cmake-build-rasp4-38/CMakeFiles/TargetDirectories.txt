@@ -1,0 +1,3 @@
+/tmp/PrakBS21/cmake-build-rasp4-38/CMakeFiles/rebuild_cache.dir
+/tmp/PrakBS21/cmake-build-rasp4-38/CMakeFiles/BSPA23.dir
+/tmp/PrakBS21/cmake-build-rasp4-38/CMakeFiles/edit_cache.dir

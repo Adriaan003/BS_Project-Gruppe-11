@@ -1,0 +1,3 @@
+/Users/ivan/CLionProjects/BSPA23/cmake-build-home/CMakeFiles/BSPA23.dir
+/Users/ivan/CLionProjects/BSPA23/cmake-build-home/CMakeFiles/edit_cache.dir
+/Users/ivan/CLionProjects/BSPA23/cmake-build-home/CMakeFiles/rebuild_cache.dir

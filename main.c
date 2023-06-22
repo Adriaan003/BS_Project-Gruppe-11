@@ -12,9 +12,9 @@
 #include "semaphore.h"
 #include <mqueue.h>
 #include <sys/msg.h>
-#include "sub.h"
 
-#define MAX_MSG_SIZE 256
+
+#define MAX_MSG_SIZE 512
 
 #define NumberOfCHILDS 2
 
@@ -22,6 +22,7 @@
 struct message {
     long mtype;
     char mtext[MAX_MSG_SIZE];
+    int key;
 };
 
 Data newData[50];
@@ -142,10 +143,11 @@ int main() {
     struct message msg;
 
     // unique key für shared message queue
-    key = ftok("/path/to/keyfile", 'A');
+
+    key = 1234;
 
 
-    mq = msgget(key, 0666);
+    mq = msgget(key, 0666 | IPC_CREAT);
     if (mq == -1) {
         perror("msgget");
         exit(1);
@@ -184,26 +186,24 @@ int main() {
                     exit(1);
                 }
                 if (pid[i] == 0) {      // Verhinderung des exponentiellen Wachstums der Kind-Prozesse
-                    while (1) {         // Empfang der Nachricht aus MQ
-                        int type = getpid() -4;
-                        printf("RCV: %i\n",getpid());
-                        printf("RCV: %i\n",type);
+                    while (1) {
+                        // Empfang der Nachricht aus MQ
+                        int type = getpid() - 4;
 
-                        if (msgrcv(mq, &msg, sizeof(struct message),type , 0) == -1) {
+                        printf("RCV: %i\n", type);
+
+                        if (msgrcv(mq, &msg, sizeof(struct message), type, 0) == -1) {
                             perror("msgrcv");
                             exit(1);
                         }
-                        printf("Success!");
-                        char *msgg = malloc(MAX_MSG_SIZE);
+                        printf("Success!\n");
+
                         char *msgg2 = malloc(MAX_MSG_SIZE);
-                        strcpy(msgg2, "Value Changed : ");
+                        sprintf(msgg2, "key %i : Value Changed : %s\n", msg.key, msg.mtext);
 
-                        strcpy(msgg, msg.mtext);
-                        strcat(msgg, "\n");
 
-                        write(sharedClient[j], msgg2, strlen(msgg2) );
-                        write(sharedClient[j], msgg, strlen(msgg));
-                        free(msgg);
+                        write(sharedClient[j], msgg2, strlen(msgg2));
+                        free(msgg2);
 
                     }
 

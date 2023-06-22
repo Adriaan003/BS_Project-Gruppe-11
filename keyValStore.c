@@ -8,12 +8,13 @@
 #include <sys/msg.h>
 
 #define NumberOfCHILDS 2
-#define MAX_MSG_SIZE 256
+#define MAX_MSG_SIZE 512
 
 
 struct message {
     long mtype;
     char mtext[MAX_MSG_SIZE];
+    int key;
 };
 
 
@@ -39,9 +40,10 @@ void setKey(char *key, char *value, Data *sharedData, Data (*sharedSub)[50], int
             struct message msg;
 
             // unique key für shared message queue
-            key_ = ftok("/path/to/keyfile", 'A');
+            key_ = 1234;
 
-            mq = msgget(key_, 0666);
+
+            mq = msgget(key_, 0666 | IPC_CREAT);
             if (mq == -1) {
                 perror("msgget");
                 exit(1);
@@ -49,6 +51,7 @@ void setKey(char *key, char *value, Data *sharedData, Data (*sharedSub)[50], int
 
 
             msg.mtype = sharedSub[i][num].pid;  // Message type
+            msg.key = num;
             strncpy(msg.mtext, sharedData[num].value, MAX_MSG_SIZE);
             printf("SND: %li\n", msg.mtype);
             // Sendung der Nachricht in die MQ
@@ -56,7 +59,6 @@ void setKey(char *key, char *value, Data *sharedData, Data (*sharedSub)[50], int
                 perror("msgsnd");
                 exit(1);
             }
-
 
 
         }
@@ -99,4 +101,3 @@ void delKey(char *key, int clientSocket, Data *sharedData) {
     //memset(&newData[num], 0, sizeof(Data));
 
 }
-
